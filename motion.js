@@ -30,8 +30,8 @@ const S = {
   press: t => spring(t, 8.0, 1),      // click press
   cur:   t => spring(t, 1.9, 1),      // cursor travel
   curSlow: t => spring(t, 1.1, 1),    // cursor drifting home
-  cam:   t => spring(t, 0.95, 1),     // camera
-  count: t => spring(t, 0.95, 1),     // number counters (monotonic)
+  cam:   t => spring(t, 0.72, 1),     // camera
+  count: t => spring(t, 1.25, 1),     // number counters (monotonic, land exactly)
   ring:  t => spring(t, 0.85, 0.92),
   draw:  t => spring(t, 0.8, 1),      // chart line draw-in
   morph: t => spring(t, 1.5, 0.9),    // chart shape changes
@@ -171,13 +171,13 @@ const SCRUB_SWAP = k => k === 0 ? -Infinity : STOPS[k] - LEAD + 0.141; // midpoi
 
 const CAM_O = [720, 630, 1];
 const CAM = [
-  [beat(12) - 0.05, 905, 520, 1.32],   // header actions + top cards
+  [beat(12) - 0.25, 905, 520, 1.32],   // header actions + top cards
   [beat(17) - 0.25, ...CAM_O],         // pull out: whole screen updates
-  [beat(21) - 0.1, 836, 430, 1.62],    // Organic Search Traffic
-  [beat(29) - 0.2, 985, 545, 1.5],     // Recommended Next Steps
-  [beat(33) - 0.1, 790, 760, 1.36],    // stats + clicks chart
-  [beat(41) - 0.45, 905, 520, 1.32],   // back to header
-  [beat(45) - 0.25, ...CAM_O],         // overview
+  [beat(21) - 0.3, 836, 430, 1.62],    // Organic Search Traffic
+  [beat(29) - 0.4, 985, 545, 1.5],     // Recommended Next Steps
+  [beat(33) - 0.3, 790, 760, 1.36],    // stats + clicks chart
+  [beat(41) - 0.6, 905, 520, 1.32],   // back to header
+  [beat(45) - 0.4, ...CAM_O],         // overview
 ];
 
 // ---------------------------------------------------------------- elements & geometry (measured once, static layout)

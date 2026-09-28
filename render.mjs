@@ -47,8 +47,9 @@ if (mode === 'beats') {
   const t0 = Date.now();
   for (let f = 0; f < frames; f++) {
     for (let s = 0; s < SUB; s++) {
-      // sub-frames straddle the frame time: shutter centred on t = f/FPS
-      const t = (f + (s + 0.5) / SUB - 0.5) / FPS;
+      // 180° shutter centred on t = f/FPS: sub-frames span half a frame interval
+      const SHUTTER = 0.5;
+      const t = (f + ((s + 0.5) / SUB - 0.5) * SHUTTER) / FPS;
       const buf = await shot(((t % info.T) + info.T) % info.T, undefined, 'jpeg');
       if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
     }

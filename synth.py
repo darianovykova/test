@@ -1,7 +1,7 @@
 """Synthesise the interface sound layer from the cue sheet exported by motion.js.
 
 Only realistic interface sounds: the mouse button being pressed ('down') and
-released ('up'). Each click is modelled physically — a very short excitation
+released ('up'), and scroll-wheel detents ('wheel'). Each click is modelled physically — a very short excitation
 burst ringing through a few resonances of a plastic mouse shell, plus a tiny
 low-frequency body knock — rather than a musical blip. Everything is procedural
 (no samples, no licensing). Events are placed on a circular buffer of exactly
@@ -27,6 +27,18 @@ def biquad_bandpass(x, f0, q):
         x2, x1, y2, y1 = x1, v, y1, o
         y[i] = o
     return y
+
+
+def wheel(seed):
+    """One detent of a mouse scroll wheel: a tiny, dry, high tick."""
+    rng = np.random.default_rng(seed)
+    n = int(0.02 * SR); t = np.arange(n) / SR
+    exc = np.zeros(n); b = int(0.0004 * SR)
+    exc[:b] = rng.standard_normal(b) * np.hanning(b * 2)[b:]
+    j = 1 + rng.uniform(-0.05, 0.05)
+    s = sum(g * biquad_bandpass(exc, f * j, q) for f, q, g in [(3300, 10, 1.0), (5400, 12, 0.6), (8200, 9, 0.3)])
+    s *= np.exp(-t / 0.0022)
+    return s / np.max(np.abs(s))
 
 
 def click(kind, seed):
@@ -65,7 +77,7 @@ def main(cues, out):
     T = data['T']; N = int(round(T * SR))
     dry = np.zeros((2, N))
     for ev in data['events']:
-        s = click(ev['type'], ev.get('seed', 0)) * ev.get('gain', 1.0)
+        s = (wheel(ev.get('seed', 0)) if ev['type'] == 'wheel' else click(ev['type'], ev.get('seed', 0))) * ev.get('gain', 1.0)
         start = int(round(ev['t'] * SR))
         idx = (start + np.arange(len(s))) % N                 # circular placement
         pan = 0.06                                             # mouse sits slightly right of centre

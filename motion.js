@@ -36,6 +36,7 @@ const S = {
   draw:  t => spring(t, 0.8, 1),      // chart line draw-in
   morph: t => spring(t, 1.5, 0.9),    // chart shape changes
   close: t => spring(t, 4.2, 1),      // menu close
+  scroll: t => spring(t, 1.15, 1),    // smooth wheel scrolling
 };
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, k) => a + (b - a) * k;
@@ -169,15 +170,22 @@ const STOPS = [0, 1, 2, 3, 4, 5, 6].map(k => STOP0 + k * BEAT);
 const LEAD = 0.44;                                           // cursor leaves this long before a stop
 const SCRUB_SWAP = k => k === 0 ? -Infinity : STOPS[k] - LEAD + 0.141; // midpoint crossing of crit. damped spring
 
-const CAM_O = [720, 630, 1];
+const CAM_O = [720, 450, 1];            // window = real 1440×900 viewport
+// Scrolling: the content area scrolls under the fixed top bar + sidebar.
+const SCROLL_MAX = 360;                  // 1188 content − 828 viewport
+const TSCROLL_DOWN = beat(33);           // 16.0  wheel down to the clicks card
+const TSCROLL_UP = beat(40) + 0.3;       // 19.8  wheel back up to the header
+const TREVEAL = TSCROLL_DOWN + 0.3;      // clicks chart draws as it scrolls into view
+const WHEEL = ts => [0, 1, 2, 3, 4, 5, 6].map(k => ts - 0.07 + k * 0.043 + (k % 2) * 0.004);
+
 const CAM = [
-  [beat(12) - 0.25, 905, 520, 1.32],   // header actions + top cards
+  [beat(12) - 0.25, 930, 440, 1.55],   // header actions + top cards
   [beat(17) - 0.25, ...CAM_O],         // pull out: whole screen updates
-  [beat(21) - 0.3, 836, 430, 1.62],    // Organic Search Traffic
-  [beat(29) - 0.4, 985, 545, 1.5],     // Recommended Next Steps
-  [beat(33) - 0.3, 790, 760, 1.36],    // stats + clicks chart
-  [beat(41) - 0.6, 905, 520, 1.32],   // back to header
-  [beat(45) - 0.4, ...CAM_O],         // overview
+  [beat(21) - 0.3, 836, 420, 1.9],     // Organic Search Traffic
+  [beat(29) - 0.4, 1000, 460, 1.7],    // Recommended Next Steps
+  [TSCROLL_DOWN - 0.05, 900, 470, 1.24], // stats + clicks chart (scrolled; window edge + scrollbar in frame)
+  [TSCROLL_UP + 0.3, 930, 440, 1.55],  // back to header once the wheel-up has started
+  [beat(45) - 0.4, ...CAM_O],          // overview
 ];
 
 // ---------------------------------------------------------------- elements & geometry (measured once, static layout)
@@ -188,7 +196,7 @@ function rel(el) {
 }
 function init() {
   E = {
-    cam: $('#cam'), page: $('#page'), cursor: $('#cursor'),
+    cam: $('#cam'), page: $('#page'), cursor: $('#cursor'), content: $('#content'), sbar: $('#sbar'),
     nav: $$('[data-nav]'), slots: $('#slots'), slotsFill: $('#slotsFill'), hello: $('#hello'),
     dd: $('#dd'), ddBox: $('#ddBox'), ddLabel: $('#ddLabel'), ddChev: $('#ddChev'), more: $('#moreBtn'),
     menu: $('#menu'), mi: [$('#mi0'), $('#mi1'), $('#mi2')],
@@ -219,7 +227,7 @@ function init() {
   G = { dd, mi, oc, cc, rows, tiles };
 
   // ---- cursor path (page coordinates): [start time, x, y, spring]
-  const REST = [1150, 1092];
+  const REST = [1150, 772];
   const oy = oc.y + 58;
   const P = [];
   P.push([beat(11) + 0.2, dd.x + 118, dd.cy + 3]);                 // → "Last month"
@@ -229,10 +237,12 @@ function init() {
   for (let k = 1; k < 7; k++) P.push([STOPS[k] - LEAD, oc.x + O_7D_X[2 * k], oy]);
   P.push([beat(29) - 0.36, rows[0].x + 300, rows[0].cy + 4]);        // recommendation rows
   for (let k = 1; k < 4; k++) P.push([beat(29 + k) - 0.36, rows[k].x + 300, rows[k].cy + 4]);
-  P.push([beat(33) - 0.15, tiles[1].x + 196, tiles[1].y + 58]);     // → Total Impressions (empty area right of value)
-  P.push([beat(37) - 0.42, cc.x + C_U_X[6], cc.y + 118]);           // → chart peak
-  P.push([beat(39) - 0.5, tiles[0].x + 214, tiles[0].y + 58]);      // → Total Clicks
-  P.push([beat(41) - 0.45, dd.x + 118, dd.cy + 3]);                 // → dropdown
+  const Y = SCROLL_MAX;                                               // targets below the fold, scrolled
+  P.push([beat(32) + 0.1, 760, 640]);                                // rest over content, then wheel down
+  P.push([TSCROLL_DOWN + 0.3, tiles[1].x + 196, tiles[1].y + 58 - Y]); // → Total Impressions (empty area right of value)
+  P.push([beat(37) - 0.42, cc.x + C_U_X[6], cc.y + 118 - Y]);       // → chart peak
+  P.push([beat(39) - 0.5, tiles[0].x + 214, tiles[0].y + 58 - Y]);  // → Total Clicks (stays put while wheeling up)
+  P.push([TSCROLL_UP + 0.22, dd.x + 118, dd.cy + 3]);               // → dropdown
   P.push([beat(43) - 0.38, mi[1].x + 70, mi[1].cy + 2]);            // → "Last month"
   P.push([beat(45) + 0.3, REST[0], REST[1], S.curSlow]);            // drift home
   G.cursor = { rest: REST, path: P };
@@ -240,12 +250,12 @@ function init() {
 
   // ---- hover windows
   G.hover = {
-    dd: [[beat(13) - 0.22, beat(15) - 0.2], [beat(41) - 0.05, beat(43) - 0.2]],
+    dd: [[beat(13) - 0.22, beat(15) - 0.2], [beat(42) - 0.16, beat(43) - 0.2]],
     mi0: [[beat(15) - 0.12, beat(16) + 0.15]],
     mi1: [[beat(43) - 0.12, beat(44) + 0.15]],
     oChart: [[STOPS[0] - 0.22, STOPS[6] + 0.3]],
     rows: [0, 1, 2, 3].map(k => [[beat(29 + k) - 0.2, beat(30 + k) - 0.2 + (k === 3 ? 0.16 : 0)]]),
-    tile1: [[beat(33) + 0.3, beat(35) + 0.05]],
+    tile1: [[TSCROLL_DOWN + 0.68, beat(35) + 0.05]],
     tile0: [[beat(39) - 0.12, beat(39) + 0.05]],
     cChart: [[beat(37) - 0.08, beat(39) - 0.4]],
   };
@@ -253,9 +263,11 @@ function init() {
 
 // ---------------------------------------------------------------- sound cue sheet (read by the audio renderer)
 const SOUND_EVENTS = (() => {
-  // Realistic interface audio only: the physical mouse button — a press on the beat, a softer release after it.
-  // Hovers, menus, data updates and chart scrubbing are silent, as they are in a real web app.
+  // Realistic interface audio only: the physical mouse — button press on the beat + softer release,
+  // and wheel notches when scrolling. Hovers, menus, data updates and scrubbing are silent, as in a real app.
   const ev = [];
+  [TSCROLL_DOWN, TSCROLL_UP].forEach((ts, j) => WHEEL(ts).forEach((w, k) =>
+    ev.push({ t: +w.toFixed(4), type: 'wheel', gain: 0.34 - 0.025 * k, seed: 200 + j * 10 + k })));
   CLICKS.forEach((c, i) => {
     ev.push({ t: +c.toFixed(4), type: 'down', gain: 1 - 0.06 * (i % 3), seed: i });
     ev.push({ t: +(c + 0.095).toFixed(4), type: 'up', gain: 0.62 - 0.04 * (i % 2), seed: 100 + i });
@@ -276,8 +288,14 @@ function seek(tIn) {
   const cx = track(t, CAM_O[0], G.cam.map(c => [c[0], c[1]]), S.cam);
   const cy = track(t, CAM_O[1], G.cam.map(c => [c[0], c[2]]), S.cam);
   const z  = track(t, CAM_O[2], G.cam.map(c => [c[0], c[3]]), S.cam);
-  const SC = 0.92 * z;
+  const SC = 0.94 * z;
   css(E.cam, 'transform', `translate(${(720 - cx * SC).toFixed(3)}px,${(720 - cy * SC).toFixed(3)}px) scale(${SC.toFixed(5)})`);
+
+  // ---------- scroll (content under fixed chrome) + overlay scrollbar
+  const scroll = track(t, 0, [[TSCROLL_DOWN, SCROLL_MAX], [TSCROLL_UP, 0]], S.scroll);
+  css(E.content, 'transform', `translateY(${(-scroll).toFixed(3)}px)`);
+  css(E.sbar, 'transform', `translateY(${(scroll / SCROLL_MAX * (828 - 4 - 577)).toFixed(3)}px)`);
+  css(E.sbar, 'opacity', (clamp(windows(t, [[TSCROLL_DOWN - 0.08, TSCROLL_DOWN + 0.95], [TSCROLL_UP - 0.08, TSCROLL_UP + 0.95]], S.fast))).toFixed(4));
 
   // ---------- press pulses
   const press = tc => S.press(t - (tc - 0.075)) - S.press(t - (tc + 0.05));
@@ -421,21 +439,21 @@ function seek(tIn) {
   const cPath = curvePath(cxs, cys);
   attr(E.cLine, 'd', cPath);
   attr(E.cArea, 'd', `${cPath}L${cxs[12].toFixed(2)},${C_BOTTOM}L${cxs[0].toFixed(2)},${C_BOTTOM}Z`);
-  attr(E.cClip, 'width', (S.draw(t - beat(10)) * 1034).toFixed(2));
+  attr(E.cClip, 'width', (S.draw(t - TREVEAL) * 1034).toFixed(2));
   attr(E.cClip, 'height', (C_BOTTOM + 30).toFixed(2));
   swap(t, E.legendT, [[-Infinity, 'Clicks'], [beat(35), 'Impressions'], [beat(39), 'Clicks']], 6);
   const Y_LM = ['36', '27', '18', '9', '0'], Y_7C = ['12', '9', '6', '3', '0'], Y_7I = ['80K', '60K', '40K', '20K', '0'];
   E.ylab.forEach((el, i) => {
     const d = 0.03 * i;
     swap(t, el, [[-Infinity, Y_LM[i]], [beat(20) + d, Y_7C[i]], [beat(36) + d, Y_7I[i]], [beat(40) + d, Y_7C[i]], [beat(46) + d, Y_LM[i]]], 5);
-    if (t < beat(20)) { const e = S.ui(t - beat(10) - d); css(el, 'opacity', clamp(e).toFixed(4)); }
+    if (t < TREVEAL + 1) { const e = S.ui(t - TREVEAL - d); css(el, 'opacity', clamp(e).toFixed(4)); }
   });
   const D_LM = ['01/04/2024', '05/04/2024', '10/04/2024', '15/04/2024', '20/04/2024', '25/04/2024', '30/04/2024'];
   const D_7D = ['24/04/2024', '25/04/2024', '26/04/2024', '27/04/2024', '28/04/2024', '29/04/2024', '30/04/2024'];
   E.dates.forEach((el, i) => {
     const d = 0.03 * i;
     swap(t, el, [[-Infinity, D_LM[i]], [beat(20) + 0.05 + d, D_7D[i]], [beat(46) + 0.05 + d, D_LM[i]]], 5);
-    if (t < beat(20)) { const e = S.ui(t - beat(10) - 0.05 - d); css(el, 'opacity', clamp(e).toFixed(4)); setT(el, 0, 4 * (1 - e)); }
+    if (t < TREVEAL + 1) { const e = S.ui(t - TREVEAL - 0.05 - d); css(el, 'opacity', clamp(e).toFixed(4)); setT(el, 0, 4 * (1 - e)); }
   });
   const hC = clamp(windows(t, G.hover.cChart));
   { const lx = clamp(px - G.cc.x, 0, 1031), ly = curveY(cxs, cys, lx);

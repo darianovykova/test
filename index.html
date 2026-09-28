@@ -17,8 +17,8 @@
 html, body { width: 1440px; height: 1440px; overflow: hidden; background: var(--canvas); }
 body { font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; color: var(--navy); }
 #stage { position: absolute; left: 0; top: 0; width: 1440px; height: 1440px; overflow: hidden; background: var(--canvas); }
-#cam { position: absolute; left: 0; top: 0; width: 1440px; height: 1260px; transform-origin: 0 0; }
-#page { position: absolute; left: 0; top: 0; width: 1440px; height: 1260px; background: var(--bg); border-radius: 21px; overflow: hidden;
+#cam { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; }
+#page { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; background: var(--bg); border-radius: 21px; overflow: hidden;
   box-shadow: 0 40px 90px rgba(58,48,38,.10), 0 12px 28px rgba(58,48,38,.06), 0 0 0 1px rgba(58,48,38,.05); }
 .abs { position: absolute; }
 .row { display: flex; align-items: center; }
@@ -38,7 +38,7 @@ svg { display: block; flex: none; }
 .who img { width: 40px; height: 40px; border-radius: 50%; display: block; }
 
 /* Sidebar */
-#sidebar { position: absolute; left: 0; top: 72px; width: 256px; height: 1188px; background: var(--navy); display: flex; flex-direction: column; justify-content: space-between; }
+#sidebar { position: absolute; left: 0; top: 72px; width: 256px; height: 828px; z-index: 2; background: var(--navy); display: flex; flex-direction: column; justify-content: space-between; }
 .site-sel-wrap { padding: 24px 8px 16px; }
 .site-sel { background: var(--gray-50); border-radius: 6px; padding: 12px 8px; display: flex; align-items: center; gap: 8px; }
 .site-sel .d { display: flex; align-items: center; gap: 4px; flex: 1; font-size: 12px; line-height: 14px; color: #13191E; }
@@ -58,7 +58,7 @@ svg { display: block; flex: none; }
 .foot-item .in { flex: 1; display: flex; align-items: center; gap: 8px; }
 
 /* Content */
-#content { position: absolute; left: 256px; top: 72px; width: 1184px; padding: 24px 48px 32px 24px; }
+#content { position: absolute; left: 256px; top: 72px; z-index: 1; width: 1184px; padding: 24px 48px 32px 24px; }
 .slots-row { display: flex; justify-content: space-between; font-size: 14px; line-height: 20px; }
 .slots-row .l { display: flex; gap: 4px; color: var(--navy); font-weight: 500; }
 .slots-row .l b { font-weight: 700; }
@@ -164,6 +164,8 @@ svg { display: block; flex: none; }
 .guide { position: absolute; top: 0; width: 0; border-left: 1px dashed #B9B8CB; }
 .dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; border: 2.5px solid var(--teal); box-shadow: 0 1px 3px rgba(18,2,66,.18); }
 
+/* macOS-style overlay scrollbar (only visible while scrolling) */
+#sbar { position: absolute; left: 1431px; top: 74px; width: 6px; height: 577px; border-radius: 3px; background: rgba(18,2,66,.32); z-index: 4; opacity: 0; }
 #cursor { position: absolute; left: 0; top: 0; width: 28px; height: 28px; z-index: 100; transform-origin: 3px 3px; }
 </style>
 </head>
@@ -339,6 +341,7 @@ svg { display: block; flex: none; }
       </div>
     </div>
    </div>
+   <div id="sbar"></div>
   </div>
  </div>
  <svg id="cursor" width="28" height="28" viewBox="0 0 28 28" fill="none">

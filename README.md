@@ -9,10 +9,10 @@ happens on the real elements.
 | File | What it is |
 |---|---|
 | `seospace-dashboard-motion.html` | **Deliverable.** Self-contained single HTML file (font, images and script inlined). Open it to watch the live loop; `?t=12.5` freezes a moment. |
-| `out/seospace-dashboard-motion.mp4` | Rendered video: 60 fps, 4-sub-frame motion blur, UI sound layer. |
+| `out/seospace-dashboard-motion.mp4` | Rendered video: 60 fps, 4-sub-frame motion blur, realistic mouse-click audio. |
 | `index.html`, `motion.js`, `assets/` | Editable sources that the bundle is built from. |
 | `render.mjs` | Playwright renderer (storyboard frames, video). |
-| `synth.py` | Procedural UI-sound synthesiser, driven by the cue sheet in `motion.js`. |
+| `synth.py` | Procedural mouse-click synthesiser (physical switch/shell model), driven by the cue sheet in `motion.js`. |
 | `bundle.mjs` | Inlines sources into the single deliverable HTML. |
 
 ## Motion system
@@ -29,6 +29,9 @@ happens on the real elements.
   enter phase, so the outgoing and incoming text never overlap.
 - The timeline is a 120 BPM grid: 0.5 s per beat, 54 beats in total, starting on a downbeat.
   Clicks, data changes and scrub stops all land on beats.
+- Audio is realistic interface sound only. Each of the 6 clicks is a mouse-button press on the
+  beat plus a softer release 95 ms later. Hovers, menus, data updates and scrubbing are silent,
+  as they are in a real web app.
 - The loop seam is the empty app shell with the cursor resting. The frame at t = 26.99 s is
   pixel-identical to the frame at t = 0.
 
@@ -51,7 +54,8 @@ happens on the real elements.
 ```bash
 npm install                 # playwright + Inter
 npm run storyboard          # one PNG per beat → out/beats
-npm run video               # frames → out/*.silent.mp4, sounds → out/ui_sounds.wav
+npm run video               # frames → out/*.silent.mp4, clicks → out/ui_sounds.wav
+node render.mjs events      # (audio only) re-export the cue sheet, then run synth.py
 ffmpeg -i out/seospace-dashboard-motion.silent.mp4 -i out/ui_sounds.wav \
   -c:v copy -c:a aac -b:a 192k -shortest out/seospace-dashboard-motion.mp4
 npm run bundle              # → seospace-dashboard-motion.html

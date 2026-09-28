@@ -253,21 +253,13 @@ function init() {
 
 // ---------------------------------------------------------------- sound cue sheet (read by the audio renderer)
 const SOUND_EVENTS = (() => {
+  // Realistic interface audio only: the physical mouse button — a press on the beat, a softer release after it.
+  // Hovers, menus, data updates and chart scrubbing are silent, as they are in a real web app.
   const ev = [];
-  const add = (t, type, gain = 1, pitch = 1) => ev.push({ t: +t.toFixed(4), type, gain, pitch });
-  add(0.0, 'pop', 0.55, 0.85); add(0.5, 'pop', 0.6, 1.0); add(1.0, 'pop', 0.7, 1.12); add(1.5, 'pop', 0.6, 1.2);
-  add(2.0, 'rise', 0.6, 1.0); add(2.5, 'rise', 0.5, 1.12);
-  add(3.0, 'tick', 0.5, 1.2); add(3.5, 'tick', 0.45, 1.3); add(4.0, 'tick', 0.45, 1.4); add(4.5, 'rise', 0.4, 1.25);
-  const hovers = [beat(13) - 0.22, beat(15) - 0.12, beat(29) - 0.2, beat(30) - 0.2, beat(31) - 0.2, beat(32) - 0.2, beat(33) + 0.3, beat(39) - 0.12, beat(41) - 0.05, beat(43) - 0.12];
-  hovers.forEach(h => add(h, 'hover', 0.5));
-  CLICKS.forEach(c => add(c, 'click', 1));
-  MENU.forEach(([o, c]) => { add(o + 0.01, 'open', 0.6); add(c + 0.02, 'close', 0.5); });
-  add(beat(35) + 0.01, 'tab', 0.6); add(beat(39) + 0.01, 'tab', 0.6);
-  [beat(17), beat(45)].forEach(t => add(t, 'refresh', 0.7));
-  [beat(18), beat(19), beat(20), beat(46)].forEach(t => add(t, 'tick', 0.32, 1.5));
-  STOPS.forEach((s, k) => add(s - 0.02, 'scrub', 0.4, 1 + k * 0.03));
-  add(beat(37), 'scrub', 0.4, 1.2);
-  add(TEXIT, 'out', 0.5, 1.0); add(TEXIT + 0.7, 'out', 0.35, 0.8);
+  CLICKS.forEach((c, i) => {
+    ev.push({ t: +c.toFixed(4), type: 'down', gain: 1 - 0.06 * (i % 3), seed: i });
+    ev.push({ t: +(c + 0.095).toFixed(4), type: 'up', gain: 0.62 - 0.04 * (i % 2), seed: 100 + i });
+  });
   return ev.sort((a, b) => a.t - b.t);
 })();
 

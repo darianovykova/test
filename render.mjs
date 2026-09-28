@@ -1,6 +1,7 @@
 // Deterministic renderer: drives window.MOTION.seek(t) and captures frames.
 //   node render.mjs beats  [out]   → one PNG per beat (storyboard check)
 //   node render.mjs frames t1,t2…  → specific timestamps
+//   node render.mjs events         → out/sound_events.json (audio cue sheet only)
 //   node render.mjs video  [out]   → 60 fps, 4 sub-frames/frame, tmix motion blur, audio muxed
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -34,6 +35,10 @@ if (mode === 'beats') {
 } else if (mode === 'frames') {
   const out = process.argv[4] || 'out/frames'; mkdirSync(out, { recursive: true });
   for (const s of process.argv[3].split(',')) await shot(parseFloat(s), `${out}/t_${s}.png`);
+} else if (mode === 'events') {
+  mkdirSync('out', { recursive: true });
+  writeFileSync('out/sound_events.json', JSON.stringify({ T: info.T, events: info.ev }, null, 1));
+  console.log(`wrote out/sound_events.json (${info.ev.length} cues)`);
 } else if (mode === 'video') {
   const out = process.argv[3] || 'out/seospace-dashboard-motion.mp4';
   mkdirSync(path.dirname(out), { recursive: true });

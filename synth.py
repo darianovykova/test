@@ -1,8 +1,11 @@
-"""Synthesise the UI sound layer from the cue sheet exported by motion.js.
+"""Synthesise the interface sound layer from the cue sheet exported by motion.js.
 
-Every sound is generated procedurally (no samples, no licensing). Events are
-placed on a circular buffer of exactly one loop length, so reverb tails wrap
-around and the audio loops as seamlessly as the picture.
+Only realistic interface sounds: the mouse button being pressed ('down') and
+released ('up'). Each click is modelled physically — a very short excitation
+burst ringing through a few resonances of a plastic mouse shell, plus a tiny
+low-frequency body knock — rather than a musical blip. Everything is procedural
+(no samples, no licensing). Events are placed on a circular buffer of exactly
+one loop length, so the small-room tail wraps and the audio loops seamlessly.
 
     python3 synth.py out/sound_events.json out/ui_sounds.wav
 """
@@ -10,80 +13,50 @@ import json, sys, wave
 import numpy as np
 
 SR = 48000
-rng = np.random.default_rng(7)
 
 
-def env(n, attack, decay):
+def biquad_bandpass(x, f0, q):
+    w0 = 2 * np.pi * f0 / SR
+    alpha = np.sin(w0) / (2 * q)
+    b0, b1, b2 = alpha, 0.0, -alpha
+    a0, a1, a2 = 1 + alpha, -2 * np.cos(w0), 1 - alpha
+    b0, b1, b2, a1, a2 = b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0
+    y = np.zeros_like(x); x1 = x2 = y1 = y2 = 0.0
+    for i, v in enumerate(x):
+        o = b0 * v + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2
+        x2, x1, y2, y1 = x1, v, y1, o
+        y[i] = o
+    return y
+
+
+def click(kind, seed):
+    """Mouse switch click. 'down' is brighter and louder than the release."""
+    rng = np.random.default_rng(seed)
+    n = int(0.06 * SR)
     t = np.arange(n) / SR
-    a = np.clip(t / max(attack, 1e-4), 0, 1)
-    return a * np.exp(-t / decay)
+    # excitation: sub-millisecond burst (the switch snapping) + a faint second bounce
+    exc = np.zeros(n)
+    burst = int(0.0007 * SR)
+    exc[:burst] = rng.standard_normal(burst) * np.hanning(burst * 2)[burst:]
+    bounce = int((0.0019 if kind == 'down' else 0.0014) * SR)
+    exc[bounce:bounce + burst] += 0.35 * rng.standard_normal(burst) * np.hanning(burst * 2)[burst:]
+    # shell resonances (slightly detuned per click so no two are identical)
+    j = 1 + rng.uniform(-0.04, 0.04)
+    modes = ([(2150, 9, 1.0), (3900, 12, 0.7), (6400, 14, 0.45), (9800, 10, 0.25)] if kind == 'down'
+             else [(1900, 8, 0.8), (3500, 10, 0.55), (5600, 12, 0.3)])
+    s = sum(g * biquad_bandpass(exc, f * j, q) for f, q, g in modes)
+    # low body knock of the button hitting the switch
+    body = np.sin(2 * np.pi * (140 if kind == 'down' else 170) * j * t) * np.exp(-t / 0.004)
+    s = s + (0.05 if kind == 'down' else 0.025) * body
+    s *= np.exp(-t / (0.006 if kind == 'down' else 0.0045))
+    return s / np.max(np.abs(s))
 
 
-def tone(freq0, freq1, dur, attack, decay, harm=0.0):
+def room_ir(dur=0.12):
+    rng = np.random.default_rng(3)
     n = int(dur * SR)
-    f = np.geomspace(freq0, freq1, n)
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    s = np.sin(ph) + harm * np.sin(2 * ph)
-    return s * env(n, attack, decay)
-
-
-def noise(dur, decay, hp=0.0):
-    n = int(dur * SR)
-    x = rng.standard_normal(n)
-    if hp:  # one-pole high-pass
-        a = np.exp(-2 * np.pi * hp / SR)
-        y = np.empty_like(x); prev_x = prev_y = 0.0
-        for i, v in enumerate(x):
-            prev_y = a * (prev_y + v - prev_x); prev_x = v; y[i] = prev_y
-        x = y
-    return x * env(n, 0.0005, decay)
-
-
-def mixin(*parts):
-    n = max(len(p) for _, p in parts)
-    out = np.zeros(n)
-    for off, p in parts:
-        o = int(off * SR); out[o:o + len(p)] += p[: n - o]
-    return out
-
-
-def make(kind, pitch=1.0):
-    p = pitch
-    if kind == 'click':      # crisp trackpad click: transient + short body
-        return mixin((0, 0.35 * noise(0.012, 0.0022, hp=2500)),
-                     (0, 0.55 * tone(2400 * p, 1900 * p, 0.03, 0.0004, 0.006)),
-                     (0, 0.45 * tone(210, 150, 0.05, 0.001, 0.012)))
-    if kind == 'hover':      # barely-there tick
-        return 0.22 * tone(3600 * p, 3300 * p, 0.012, 0.0005, 0.0025)
-    if kind == 'tick':
-        return 0.3 * tone(1800 * p, 1500 * p, 0.03, 0.0008, 0.006)
-    if kind == 'scrub':
-        return 0.22 * tone(2300 * p, 2100 * p, 0.02, 0.0005, 0.004)
-    if kind == 'pop':        # soft bubble for entrances
-        return 0.42 * tone(420 * p, 690 * p, 0.12, 0.004, 0.032, harm=0.15)
-    if kind == 'rise':       # data drawing in
-        return 0.16 * tone(380 * p, 980 * p, 0.55, 0.06, 0.16, harm=0.2)
-    if kind == 'open':
-        return mixin((0.0, 0.26 * tone(620, 660, 0.12, 0.003, 0.035)),
-                     (0.045, 0.22 * tone(930, 990, 0.14, 0.003, 0.04)),
-                     (0, 0.05 * noise(0.08, 0.02, hp=4000)))
-    if kind == 'close':
-        return mixin((0.0, 0.2 * tone(930, 880, 0.1, 0.003, 0.028)),
-                     (0.04, 0.18 * tone(640, 600, 0.12, 0.003, 0.03)))
-    if kind == 'tab':
-        return mixin((0, 0.3 * tone(1250, 1180, 0.06, 0.001, 0.012)),
-                     (0.028, 0.22 * tone(1870, 1800, 0.07, 0.001, 0.014)))
-    if kind == 'refresh':    # airy arpeggio when data updates
-        return mixin(*[(i * 0.038, 0.13 * tone(f, f * 1.003, 0.45, 0.004, 0.11)) for i, f in enumerate((880, 1108.7, 1318.5, 1760))])
-    if kind == 'out':        # content resolving away
-        return 0.14 * tone(760 * p, 380 * p, 0.5, 0.02, 0.14, harm=0.1)
-    raise ValueError(kind)
-
-
-def reverb_ir(dur=0.35):
-    n = int(dur * SR)
-    ir = rng.standard_normal(n) * np.exp(-np.arange(n) / SR / 0.07)
-    ir[:int(0.012 * SR)] = 0
+    ir = rng.standard_normal(n) * np.exp(-np.arange(n) / SR / 0.018)
+    ir[: int(0.004 * SR)] = 0
     return ir / np.sqrt(np.sum(ir ** 2))
 
 
@@ -92,15 +65,15 @@ def main(cues, out):
     T = data['T']; N = int(round(T * SR))
     dry = np.zeros((2, N))
     for ev in data['events']:
-        s = make(ev['type'], ev.get('pitch', 1.0)) * ev.get('gain', 1.0)
+        s = click(ev['type'], ev.get('seed', 0)) * ev.get('gain', 1.0)
         start = int(round(ev['t'] * SR))
-        idx = (start + np.arange(len(s))) % N            # circular placement
-        pan = 0.08 * np.sin(ev['t'] * 1.7)                # tiny stereo movement
+        idx = (start + np.arange(len(s))) % N                 # circular placement
+        pan = 0.06                                             # mouse sits slightly right of centre
         np.add.at(dry[0], idx, s * (1 - pan)); np.add.at(dry[1], idx, s * (1 + pan))
-    ir = reverb_ir()
+    ir = room_ir()
     wet = np.stack([np.real(np.fft.ifft(np.fft.fft(ch) * np.fft.fft(ir, N))) for ch in dry])  # circular conv.
-    mix = dry + 0.18 * wet
-    mix *= 10 ** (-6 / 20) / np.max(np.abs(mix))           # peak −6 dBFS
+    mix = dry + 0.06 * wet
+    mix *= 10 ** (-9 / 20) / np.max(np.abs(mix))               # peak −9 dBFS: a click, not an effect
     pcm = (np.clip(mix.T, -1, 1) * 32767).astype('<i2')
     with wave.open(out, 'wb') as w:
         w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes(pcm.tobytes())

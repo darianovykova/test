@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SEOspace Dashboard — Motion</title>
+<meta name="viewport" content="width=1440, initial-scale=1">
+<style>
+@font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; }
+:root {
+  --navy: #120242; --side-text: #686685; --teal: #25D3B1; --teal-text: #1A927B;
+  --gray-800: #2B2F36; --gray-600: #475467; --gray-500: #667085; --gray-400: #98A2B3;
+  --gray-200: #EAECF0; --gray-100: #F2F4F7; --gray-50: #F9FAFB; --body: #5D5F6C;
+  --stroke: #CFCFD9; --divider: #E0E0E6; --bg: #FEFCFB; --canvas: #ECEAE6;
+  --card-shadow: 0 1px 8px rgba(52,52,83,.14);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1440px; height: 1440px; overflow: hidden; background: var(--canvas); }
+body { font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; color: var(--navy); }
+#stage { position: absolute; left: 0; top: 0; width: 1440px; height: 1440px; overflow: hidden; background: var(--canvas); }
+#cam { position: absolute; left: 0; top: 0; width: 1440px; height: 1260px; transform-origin: 0 0; }
+#page { position: absolute; left: 0; top: 0; width: 1440px; height: 1260px; background: var(--bg); border-radius: 21px; overflow: hidden;
+  box-shadow: 0 40px 90px rgba(58,48,38,.10), 0 12px 28px rgba(58,48,38,.06), 0 0 0 1px rgba(58,48,38,.05); }
+.abs { position: absolute; }
+.row { display: flex; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.tnum { font-variant-numeric: tabular-nums; }
+svg { display: block; flex: none; }
+
+/* Top bar */
+#topbar { position: absolute; left: 0; top: 0; width: 1440px; height: 72px; background: #fff; z-index: 3;
+  filter: drop-shadow(0 1px 4px rgba(52,52,83,.12)); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+#topbar .logo { width: 138px; height: 25.55px; display: block; }
+.profile { display: flex; align-items: center; gap: 32px; }
+.who { display: flex; align-items: center; gap: 12px; }
+.who .names { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 14px; line-height: 20px; }
+.who .n1 { font-weight: 500; color: var(--navy); }
+.who .n2 { font-weight: 400; color: var(--side-text); }
+.who img { width: 40px; height: 40px; border-radius: 50%; display: block; }
+
+/* Sidebar */
+#sidebar { position: absolute; left: 0; top: 72px; width: 256px; height: 1188px; background: var(--navy); display: flex; flex-direction: column; justify-content: space-between; }
+.site-sel-wrap { padding: 24px 8px 16px; }
+.site-sel { background: var(--gray-50); border-radius: 6px; padding: 12px 8px; display: flex; align-items: center; gap: 8px; }
+.site-sel .d { display: flex; align-items: center; gap: 4px; flex: 1; font-size: 12px; line-height: 14px; color: #13191E; }
+.nav { display: flex; flex-direction: column; gap: 8px; }
+.nav-item { height: 48px; display: flex; align-items: center; font-size: 14px; line-height: 20px; font-weight: 500; color: #fff; }
+.nav-item .in { display: flex; align-items: center; gap: 8px; flex: 1; }
+.nav-item .in span { flex: 1; }
+.nav-dash { padding: 0 16px 0 8px; }
+.nav-dash .pill { width: 100%; height: 48px; border-radius: 6px; background: #463E61; padding: 0 8px; display: flex; align-items: center; gap: 8px; }
+.nav-std { padding: 0 16px; }
+.nav-std .in { padding-right: 8px; }
+.nav-kw { padding: 0 24px 0 16px; }
+.nav-local { padding: 0 8px; }
+.nav-local .box { width: 232px; height: 48px; padding: 0 8px; display: flex; align-items: center; }
+.side-foot { padding: 32px 0; }
+.foot-item { height: 44px; padding: 0 16px; display: flex; align-items: center; font-size: 14px; line-height: 20px; font-weight: 500; color: #fff; }
+.foot-item .in { flex: 1; display: flex; align-items: center; gap: 8px; }
+
+/* Content */
+#content { position: absolute; left: 256px; top: 72px; width: 1184px; padding: 24px 48px 32px 24px; }
+.slots-row { display: flex; justify-content: space-between; font-size: 14px; line-height: 20px; }
+.slots-row .l { display: flex; gap: 4px; color: var(--navy); font-weight: 500; }
+.slots-row .l b { font-weight: 700; }
+.slots-row .r { font-weight: 700; color: var(--teal-text); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+.slots-bar { position: relative; margin-top: 8px; height: 8px; width: 1112px; border-radius: 4px; background: #D1F5EE; overflow: hidden; }
+.slots-bar i { position: absolute; left: 0; top: 0; height: 8px; width: 126px; border-radius: 4px; background: var(--teal); transform-origin: 0 50%; }
+.welcome { position: relative; z-index: 10; margin-top: 16px; height: 40px; display: flex; justify-content: space-between; align-items: center; }
+.welcome h1 { font-size: 24px; line-height: 32px; font-weight: 600; color: var(--gray-800); }
+.actions { display: flex; gap: 16px; width: 360px; }
+#dd { position: relative; width: 172px; height: 40px; }
+#ddBox { position: absolute; inset: 0; background: #fff; border: 1px solid var(--stroke); border-radius: 6px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; line-height: 20px; color: var(--navy); }
+#ddLabel { display: inline-block; white-space: nowrap; }
+.btn { width: 172px; height: 40px; background: var(--navy); border: 1px solid #12142D; border-radius: 6px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; color: #fff; font-weight: 600; font-size: 14px; line-height: 20px; box-shadow: 0 1px 2px rgba(16,24,40,.05); }
+#menu { position: absolute; left: 0; top: 46px; width: 172px; background: #fff; border: 1px solid var(--stroke); border-radius: 6px; padding: 4px; z-index: 20;
+  box-shadow: 0 12px 24px -4px rgba(52,52,83,.14), 0 2px 6px rgba(52,52,83,.08); transform-origin: 50% 0; }
+.mi { height: 40px; border-radius: 4px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; line-height: 20px; color: var(--navy); position: relative; }
+.mi .hl { position: absolute; inset: 0; border-radius: 4px; background: var(--gray-100); opacity: 0; }
+.mi span, .mi svg { position: relative; }
+
+.cards { margin-top: 16px; display: flex; gap: 16px; height: 598px; }
+.card { width: 360px; background: #fff; border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; display: flex; flex-direction: column; }
+.ttl { display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 24px; font-weight: 500; color: var(--gray-600); white-space: nowrap; }
+.health { height: 344px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+.health .hdr { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.health .url { font-size: 14px; line-height: 20px; color: var(--navy); }
+.ring { position: relative; width: 140px; height: 140px; }
+.ring > svg { position: absolute; left: -8px; top: -8px; }
+.score { position: absolute; left: 50%; top: 50%; width: max-content; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; margin: 0.2px 0 0 0.2px; }
+.score .v { display: flex; align-items: baseline; white-space: nowrap; }
+.score .big { font-size: 32px; line-height: 39px; font-weight: 700; letter-spacing: -0.64px; color: var(--navy); }
+.score .of { font-size: 18px; line-height: 26.75px; font-weight: 500; color: var(--side-text); }
+.chip { display: flex; align-items: center; gap: 4.8px; color: var(--teal-text); font-weight: 600; white-space: nowrap; }
+.score .chip { font-size: 16px; line-height: 21.7px; }
+.health .desc { width: 312px; font-size: 14px; line-height: 20px; color: var(--body); }
+.kw { height: 254px; border-top: 1px solid var(--divider); padding-top: 24px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.kw .body { flex: 1; display: flex; gap: 31px; align-items: center; }
+.kw .sum { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+.kw .count { font-size: 36px; line-height: 44px; font-weight: 600; letter-spacing: -0.72px; color: var(--navy); }
+.kw .tbl { width: 111px; height: 100%; display: flex; flex-direction: column; gap: 4px; }
+.kw .th { height: 24px; display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 18px; font-weight: 500; color: var(--gray-400); }
+.kw .th span:first-child, .kw .tr .p { width: 64px; }
+.kw .tr { flex: 1; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--gray-200); font-size: 14px; line-height: 20px; color: var(--navy); }
+.kw .tr .vol { font-weight: 600; display: inline-block; }
+.kw .link { width: 100%; padding: 8px 24px 24px; }
+.kw .link div { display: flex; align-items: center; gap: 3.5px; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--navy); }
+.organic { flex: 1; border-bottom: 1px solid var(--divider); padding: 24px; display: flex; flex-direction: column; gap: 48px; overflow: hidden; }
+.organic .sumy { flex: 1; display: flex; flex-direction: column; gap: 48px; justify-content: flex-end; }
+.organic .val { font-size: 36px; line-height: 44px; font-weight: 600; letter-spacing: -0.72px; color: var(--navy); }
+.organic .trendw { flex: 1; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.organic .chip { gap: 8px; font-size: 18px; line-height: 28px; justify-content: flex-end; }
+#oChart { position: relative; width: 312px; height: 96px; flex: none; }
+#oChart svg.plot { position: absolute; left: 0; top: 0; overflow: visible; }
+.pages { height: 254px; display: flex; flex-direction: column; }
+.pages .top { padding: 24px 24px 8px; display: flex; flex-direction: column; gap: 16px; }
+.pages .th { display: flex; gap: 8px; padding-bottom: 4px; font-size: 12px; line-height: 18px; font-weight: 500; color: var(--gray-400); }
+.pages .th span:first-child { flex: 1; }
+.pages .main { flex: 1; padding: 0 24px 24px; display: flex; flex-direction: column; gap: 8px; }
+.pages .tr { flex: 1; display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--gray-200); font-size: 14px; line-height: 20px; font-weight: 500; }
+.pages .tr:last-child { border-bottom: 0; padding-bottom: 0; }
+.pages .tr .u { flex: 1; color: #293241; white-space: nowrap; }
+.pages .tr .t { color: var(--gray-800); text-align: right; min-width: 40px; display: inline-block; }
+.rec { filter: drop-shadow(0 1px 4px rgba(52,52,83,.14)); box-shadow: none; }
+.rec .hd { background: #fff; border-bottom: 1px solid var(--divider); padding: 24px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+.rec .hd .ttl { flex: 1; }
+.rec .pg { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; color: var(--navy); }
+.rec .pg .ar { display: flex; gap: 8px; }
+.rrow { position: relative; flex: 1; background: #fff; border-bottom: 1px solid var(--divider); padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+.rrow .hov { position: absolute; inset: 0; background: #F5F6F8; opacity: 0; }
+.rrow .ct { position: relative; width: 276px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.rrow .tt { display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 24px; font-weight: 600; color: var(--gray-800); white-space: nowrap; }
+.rrow .ds { font-size: 14px; line-height: 20px; color: var(--body); }
+.rrow .arr { position: relative; }
+.badge { width: 40px; height: 20px; border-radius: 4px; background: #E7DFFF; display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 14px; font-weight: 500; color: var(--navy); }
+
+.lc { margin-top: 24px; width: 1112px; background: #fff; border-radius: 12px; box-shadow: var(--card-shadow); overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.stats { position: relative; width: 100%; height: 92px; background: #F4F7FF; border-top-left-radius: 4px; }
+#tabSurf { position: absolute; left: 0; top: 0; width: 278px; height: 92px; background: #fff; border-top-left-radius: 12px; }
+#tabLine { position: absolute; left: 24px; top: 88px; width: 230px; height: 4px; background: var(--navy); }
+.tile { position: absolute; top: 0; width: 278px; height: 92px; padding: 16px 24px 0; }
+.tile .lb { display: flex; align-items: center; gap: 8px; height: 20px; font-size: 14px; line-height: 20px; white-space: nowrap; }
+.tile .vv { margin-top: 2px; font-size: 30px; line-height: 38px; font-weight: 700; white-space: nowrap; display: inline-block; }
+.sep { position: absolute; top: 16px; width: 1px; height: 60px; background: var(--stroke); }
+.lcb { width: 100%; padding: 0 24px 24px; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+.legend { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; font-weight: 500; color: rgba(0,0,0,.38); height: 20px; }
+.legend i { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }
+.lcrow { width: 100%; display: flex; justify-content: space-between; }
+.ylab { width: 23.35px; display: flex; flex-direction: column; gap: 30px; align-items: flex-end; font-size: 12px; line-height: 18px; color: var(--gray-500); text-align: right; }
+.ylab span { display: block; white-space: nowrap; }
+.cwd { width: 1031px; display: flex; flex-direction: column; gap: 16px; }
+#cChart { position: relative; width: 1031px; height: 204.3px; }
+#cChart svg.plot { position: absolute; left: 0; top: 0; overflow: visible; }
+.gl { position: absolute; left: 1px; width: 1030px; height: 1px; background: #F3F3F3; }
+.gv { position: absolute; top: 8px; width: 0; height: 196px; border-left: 1px dashed #EDEDED; }
+.dates { width: 1015px; display: flex; justify-content: space-between; font-size: 12px; line-height: 18px; color: var(--gray-400); }
+.dates span { display: inline-block; white-space: nowrap; }
+
+/* hover chart ui */
+.tip { position: absolute; left: 0; top: 0; background: #fff; border-radius: 6px; padding: 8px 10px; white-space: nowrap; z-index: 5;
+  box-shadow: 0 4px 16px rgba(52,52,83,.14), 0 0 0 1px rgba(52,52,83,.06); pointer-events: none; }
+.tip .k { font-size: 12px; line-height: 16px; color: var(--gray-500); }
+.tip .v { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--navy); display: flex; align-items: baseline; gap: 4px; }
+.tip .v em { font-style: normal; font-weight: 400; font-size: 12px; color: var(--gray-500); }
+.guide { position: absolute; top: 0; width: 0; border-left: 1px dashed #B9B8CB; }
+.dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; border: 2.5px solid var(--teal); box-shadow: 0 1px 3px rgba(18,2,66,.18); }
+
+#cursor { position: absolute; left: 0; top: 0; width: 28px; height: 28px; z-index: 100; transform-origin: 3px 3px; }
+</style>
+</head>
+<body>
+<div id="stage">
+ <div id="cam">
+  <div id="page">
+   <!-- ========== Top bar ========== -->
+   <div id="topbar">
+     <img class="logo" src="assets/logo.png" alt="SEOspace">
+     <div class="profile">
+       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M11.999 2C6.48549 2 1.99988 6.48561 1.99988 11.9991V16.1418C1.99988 17.1657 2.8968 17.9986 3.99971 17.9986H4.99962C5.26481 17.9986 5.51914 17.8933 5.70667 17.7058C5.89419 17.5182 5.99953 17.2639 5.99953 16.9987V11.8562C5.99953 11.591 5.89419 11.3366 5.70667 11.1491C5.51914 10.9616 5.26481 10.8562 4.99962 10.8562H4.0917C4.64765 6.98657 7.97736 3.99983 11.999 3.99983C16.0207 3.99983 19.3504 6.98657 19.9063 10.8562H18.9984C18.7332 10.8562 18.4789 10.9616 18.2914 11.1491C18.1038 11.3366 17.9985 11.591 17.9985 11.8562V17.9986C17.9985 19.1015 17.1016 19.9984 15.9987 19.9984H13.9988V18.9985H9.99919V21.9983H15.9987C18.2045 21.9983 19.9983 20.2044 19.9983 17.9986C21.1012 17.9986 21.9982 17.1657 21.9982 16.1418V11.9991C21.9982 6.48561 17.5125 2 11.999 2Z" fill="#120242"/></svg>
+       <div class="who"><div class="names"><span class="n1">Emily Rose</span><span class="n2">Expert</span></div><img src="assets/avatar.jpg" alt=""></div>
+     </div>
+   </div>
+
+   <!-- ========== Sidebar ========== -->
+   <div id="sidebar">
+    <div>
+     <div class="site-sel-wrap"><div class="site-sel">
+       <div class="d"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.99914 15.1934C13.1285 15.1934 15.6653 12.8679 15.6653 9.99937C15.6653 7.13081 13.1285 4.80538 9.99914 4.80538C6.86979 4.80538 4.33296 7.13081 4.33296 9.99937C4.33296 12.8679 6.86979 15.1934 9.99914 15.1934ZM9.99914 19.1652C15.5215 19.1652 19.9983 15.0615 19.9983 9.99937C19.9983 4.9372 15.5215 0.833496 9.99914 0.833496C4.47677 0.833496 0 4.9372 0 9.99937C0 15.0615 4.47677 19.1652 9.99914 19.1652Z" fill="#6938EF"/><path d="M10.1136 10.2C11.1549 9.24548 12.8432 9.24548 13.8845 10.2L19.0695 14.9529C20.1108 15.9075 20.1108 17.4551 19.0695 18.4096C18.0282 19.3641 16.3399 19.3641 15.2986 18.4096L10.1136 13.6567C9.07226 12.7022 9.07226 11.1545 10.1136 10.2Z" fill="#F670C7"/><path d="M11.5693 14.9915L14.8624 18.0101C16.4419 17.2026 17.7578 16.0139 18.6621 14.5798L15.396 11.5859C14.8224 13.2272 13.3824 14.5131 11.5693 14.9915Z" fill="#6519BA"/></svg><span>website-example.com</span></div>
+       <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M13.5733 11.908L9.99858 15.491L6.42389 11.908C6.26699 11.7511 6.05418 11.6629 5.83228 11.6629C5.61038 11.6629 5.39757 11.7511 5.24066 11.908C5.08375 12.0649 4.99561 12.2777 4.99561 12.4996C4.99561 12.7215 5.08375 12.9343 5.24066 13.0912L9.40697 17.2575C9.48443 17.3356 9.57659 17.3976 9.67813 17.4399C9.77967 17.4822 9.88858 17.504 9.99858 17.504C10.1086 17.504 10.2175 17.4822 10.319 17.4399C10.4206 17.3976 10.5127 17.3356 10.5902 17.2575L14.7565 13.0912C14.8342 13.0135 14.8958 12.9213 14.9379 12.8198C14.9799 12.7182 15.0016 12.6094 15.0016 12.4996C15.0016 12.3897 14.9799 12.2809 14.9379 12.1794C14.8958 12.0779 14.8342 11.9857 14.7565 11.908C14.6788 11.8303 14.5866 11.7686 14.4851 11.7266C14.3836 11.6845 14.2748 11.6629 14.1649 11.6629C14.055 11.6629 13.9462 11.6845 13.8447 11.7266C13.7432 11.7686 13.651 11.8303 13.5733 11.908ZM6.42389 8.09162L9.99858 4.5086L13.5733 8.09162C13.6507 8.16972 13.7429 8.23171 13.8444 8.27402C13.946 8.31632 14.0549 8.3381 14.1649 8.3381C14.2749 8.3381 14.3838 8.31632 14.4853 8.27402C14.5869 8.23171 14.679 8.16972 14.7565 8.09162C14.8346 8.01416 14.8966 7.922 14.9389 7.82046C14.9812 7.71892 15.003 7.61001 15.003 7.50001C15.003 7.39001 14.9812 7.28109 14.9389 7.17955C14.8966 7.07801 14.8346 6.98585 14.7565 6.90839L10.5902 2.74208C10.5127 2.66398 10.4206 2.60199 10.319 2.55969C10.2175 2.51739 10.1086 2.49561 9.99858 2.49561C9.88858 2.49561 9.77967 2.51739 9.67813 2.55969C9.57659 2.60199 9.48443 2.66398 9.40697 2.74208L5.24066 6.90839C5.16297 6.98608 5.10134 7.07832 5.05929 7.17983C5.01725 7.28133 4.99561 7.39013 4.99561 7.50001C4.99561 7.7219 5.08375 7.93472 5.24066 8.09162C5.39757 8.24853 5.61038 8.33668 5.83228 8.33668C6.05418 8.33668 6.26699 8.24853 6.42389 8.09162Z" fill="#302F32"/></svg>
+     </div></div>
+     <div class="nav">
+      <div class="nav-item nav-dash" data-nav><div class="pill"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2.00098 4.55591C2.00098 4.14339 2.16953 3.74776 2.46957 3.45606C2.7696 3.16436 3.17653 3.00049 3.60084 3.00049H8.40043V16.9993H3.60084C3.17653 16.9993 2.7696 16.8354 2.46957 16.5437C2.16953 16.252 2.00098 15.8564 2.00098 15.4439V4.55591ZM11.6001 3.00049H16.3997C16.824 3.00049 17.231 3.16436 17.531 3.45606C17.831 3.74776 17.9996 4.14339 17.9996 4.55591V8.44446H11.6001V3.00049ZM11.6001 11.5553H17.9996V15.4439C17.9996 15.8564 17.831 16.252 17.531 16.5437C17.231 16.8354 16.824 16.9993 16.3997 16.9993H11.6001V11.5553Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Dashboard</span></div></div>
+      <div class="nav-item nav-std" data-nav><div class="in"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M17.9984 7.59903V12.9986C17.9984 15.7598 15.76 17.9981 12.9988 17.9981H6.99932C4.23814 17.9981 1.99976 15.7597 1.99976 12.9986V6.99908C1.99976 4.23789 4.23814 1.99951 6.99932 1.99951H13.1988" stroke="white" stroke-width="1.49987" stroke-linecap="round"/><ellipse cx="1.59986" cy="1.59986" rx="1.59986" ry="1.59986" transform="matrix(-1 0 0 1 18.7983 1.99951)" stroke="white" stroke-width="1.49987"/><path d="M6.33366 11.9995L8.6668 9.33307L10.6666 10.9996L12.9998 8.33316" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Site Audit</span><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4.99951 7.49951L9.99908 12.4991L14.9986 7.49951" stroke="white" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+      <div class="nav-item nav-std" data-nav><div class="in"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.83513 11.5508H2.6151C2.45222 11.5508 2.29602 11.6155 2.18085 11.7307C2.06568 11.8459 2.00098 12.0021 2.00098 12.165V17.3875C2.00098 17.7273 2.27658 18.0016 2.6151 18.0016H7.83765C8.17743 18.0016 8.45177 17.726 8.45177 17.3875V12.165C8.45177 12.0021 8.38707 11.8459 8.2719 11.7307C8.15673 11.6155 8.00052 11.5508 7.83765 11.5508H7.83513ZM17.3855 11.5508H12.1629C12.0001 11.5508 11.8438 11.6155 11.7287 11.7307C11.6135 11.8459 11.5488 12.0021 11.5488 12.165V17.3875C11.5488 17.7273 11.8231 18.0016 12.1629 18.0016H17.3855C17.7253 18.0016 17.9996 17.726 17.9996 17.3875V12.165C17.9996 12.0021 17.9349 11.8459 17.8197 11.7307C17.7046 11.6155 17.5484 11.5508 17.3855 11.5508ZM7.83513 2.00175H2.6151C2.45222 2.00175 2.29602 2.06645 2.18085 2.18162C2.06568 2.29679 2.00098 2.45299 2.00098 2.61587V7.83842C2.00098 8.1782 2.27658 8.45254 2.6151 8.45254H7.83765C8.17743 8.45254 8.45177 8.17694 8.45177 7.83842V2.61461C8.45177 2.45173 8.38707 2.29553 8.2719 2.18036C8.15673 2.06519 8.00052 2.00049 7.83765 2.00049L7.83513 2.00175ZM11.4418 5.70284C11.063 5.6374 11.063 5.09501 11.4418 5.02831C12.1117 4.91182 12.7316 4.59848 13.2227 4.12827C13.7138 3.65805 14.0537 3.05224 14.1991 2.38809L14.2217 2.28364C14.3035 1.90988 14.8359 1.9061 14.9214 2.27986L14.9491 2.40193C15.1 3.06325 15.4429 3.66523 15.9348 4.13228C16.4268 4.59933 17.0457 4.91062 17.7139 5.02705C18.094 5.09249 18.094 5.63866 17.7139 5.70535C17.0457 5.82179 16.4268 6.13308 15.9348 6.60013C15.4429 7.06717 15.1 7.66916 14.9491 8.33047L14.9214 8.45128C14.8359 8.82504 14.3048 8.82252 14.2217 8.44876L14.1991 8.34431C14.0539 7.67993 13.7141 7.07385 13.223 6.60339C12.7319 6.13293 12.1118 5.81942 11.4418 5.70284Z" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Lead Generation</span></div></div>
+      <div class="nav-item nav-kw" data-nav><div class="in"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="1.99976" y="2" width="15.9986" height="15.9986" rx="4.99957" stroke="white" stroke-width="1.49987"/><path d="M14.3988 10.3989L8.79932 10.3989" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.3989 8.79906L14.3989 10.3989" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.3992 8.79906L12.3992 10.3989" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/><circle cx="1.59986" cy="1.59986" r="1.59986" transform="matrix(-1 0 0 1 8.79932 8.79932)" stroke="white" stroke-width="1.49987"/></svg><span>Keyword Research</span><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4.99951 7.49951L9.99908 12.4991L14.9986 7.49951" stroke="white" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+      <div class="nav-item nav-local" data-nav><div class="box"><div class="in"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M18.3319 7.49941V12.499C18.3319 14.5821 17.9152 16.0403 16.982 16.9819L11.6658 11.6657L18.1069 5.22461C18.2569 5.88289 18.3319 6.63282 18.3319 7.49941Z" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.1068 5.22453L5.22452 18.1068C2.7164 17.5318 1.6665 15.7986 1.6665 12.4989V7.49933C1.6665 3.33303 3.33303 1.6665 7.49933 1.6665H12.4989C15.7986 1.6665 17.5318 2.71642 18.1068 5.22453Z" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.9819 16.9817C16.0404 17.915 14.5821 18.3316 12.499 18.3316H7.49942C6.63283 18.3316 5.88289 18.2566 5.22461 18.1066L11.6657 11.6655L16.9819 16.9817Z" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.19948 6.64945C5.7661 4.208 9.43246 4.208 9.99907 6.64945C10.324 8.08266 9.42411 9.29922 8.63251 10.0492C8.05756 10.5991 7.14932 10.5991 6.56604 10.0492C5.77444 9.29922 4.86618 8.08266 5.19948 6.64945Z" stroke="white" stroke-width="1.49987"/><path d="M7.57807 7.24915H7.58555" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Local SEO</span></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4.99951 7.49951L9.99908 12.4991L14.9986 7.49951" stroke="white" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+     </div>
+    </div>
+    <div class="side-foot">
+      <div class="foot-item" data-nav><div class="in"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M1.99976 8.10104C1.99976 6.79828 3.05585 5.74219 4.3586 5.74219H15.6395C16.9423 5.74219 17.9984 6.79828 17.9984 8.10104C17.9984 9.14272 17.3151 10.0611 16.3173 10.3604L10.861 11.9973C10.2988 12.166 9.69937 12.166 9.1371 11.9973L3.6808 10.3604C2.68304 10.0611 1.99976 9.14272 1.99976 8.10104Z" stroke="white" stroke-width="1.49987"/><path d="M9.99927 9.85617L9.99927 8.48486" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.6665 9.85596L2.6665 14.3984C2.6665 16.0551 4.00953 17.3981 5.66624 17.3981H14.3322C15.9889 17.3981 17.3319 16.0551 17.3319 14.3984V9.85596" stroke="white" stroke-width="1.49987"/><path d="M12.6656 5.74212V5.66595C12.6656 4.19332 11.4718 2.99951 9.9992 2.99951C8.52657 2.99951 7.33276 4.19332 7.33276 5.66595L7.33276 5.74212" stroke="white" stroke-width="1.49987"/></svg><span>Hire Us</span></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.4989 2.50001H17.4984L17.4984 7.49958M17.4984 2.50001L9.99911 9.99935M8.33259 2.5H6.49941C5.0994 2.5 4.3994 2.5 3.86466 2.77246C3.3943 3.01212 3.01188 3.39454 2.77222 3.86491C2.49976 4.39964 2.49976 5.09964 2.49976 6.49965V13.4991C2.49976 14.8991 2.49976 15.5991 2.77222 16.1338C3.01188 16.6042 3.3943 16.9866 3.86466 17.2262C4.3994 17.4987 5.0994 17.4987 6.49941 17.4987H13.4988C14.8988 17.4987 15.5988 17.4987 16.1336 17.2262C16.6039 16.9866 16.9863 16.6042 17.226 16.1338C17.4985 15.5991 17.4985 14.8991 17.4985 13.4991V11.6659" stroke="#EFF0F6" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="foot-item" data-nav><div class="in"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M14.1654 12.0825V9.57809C14.1654 9.42854 14.1654 9.35376 14.1427 9.28775C14.1225 9.22937 14.0897 9.17619 14.0464 9.13207C13.9976 9.08218 13.9307 9.04874 13.7969 8.98186L9.99912 7.08295M3.33303 7.91621V13.5879C3.33303 13.8978 3.33303 14.0528 3.38137 14.1884C3.42411 14.3084 3.49376 14.4169 3.58499 14.5057C3.68818 14.6062 3.82904 14.6708 4.11075 14.7999L9.44363 17.2441C9.64797 17.3378 9.75014 17.3846 9.85658 17.4031C9.9509 17.4195 10.0473 17.4195 10.1417 17.4031C10.2481 17.3846 10.3503 17.3378 10.5546 17.2441L15.8875 14.7999C16.1692 14.6708 16.3101 14.6062 16.4132 14.5057C16.5045 14.4169 16.5741 14.3084 16.6169 14.1884C16.6652 14.0528 16.6652 13.8978 16.6652 13.5879V7.91621M1.6665 7.08295L9.701 3.0657C9.81031 3.01105 9.86497 2.98372 9.92229 2.97296C9.97307 2.96344 10.0252 2.96344 10.0759 2.97296C10.1333 2.98372 10.1879 3.01105 10.2972 3.0657L18.3317 7.08295L10.2972 11.1002C10.1879 11.1549 10.1333 11.1822 10.0759 11.1929C10.0252 11.2025 9.97307 11.2025 9.92229 11.1929C9.86497 11.1822 9.81031 11.1549 9.701 11.1002L1.6665 7.08295Z" stroke="white" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/></svg><span>SEO Academy</span></div><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.4989 2.50001H17.4984L17.4984 7.49958M17.4984 2.50001L9.99911 9.99935M8.33259 2.5H6.49941C5.0994 2.5 4.3994 2.5 3.86466 2.77246C3.3943 3.01212 3.01188 3.39454 2.77222 3.86491C2.49976 4.39964 2.49976 5.09964 2.49976 6.49965V13.4991C2.49976 14.8991 2.49976 15.5991 2.77222 16.1338C3.01188 16.6042 3.3943 16.9866 3.86466 17.2262C4.3994 17.4987 5.0994 17.4987 6.49941 17.4987H13.4988C14.8988 17.4987 15.5988 17.4987 16.1336 17.2262C16.6039 16.9866 16.9863 16.6042 17.226 16.1338C17.4985 15.5991 17.4985 14.8991 17.4985 13.4991V11.6659" stroke="#EFF0F6" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+   </div>
+
+   <!-- ========== Content ========== -->
+   <div id="content">
+    <div id="slots">
+      <div class="slots-row"><div class="l"><b>1</b><span>of</span><b>10</b><span>website slots used</span></div><div class="r">Get more slots</div></div>
+      <div class="slots-bar"><i id="slotsFill"></i></div>
+    </div>
+    <div class="welcome">
+      <h1 id="hello">Welcome, Emily!</h1>
+      <div class="actions">
+        <div id="dd">
+          <div id="ddBox"><span id="ddLabel">Last month</span><svg id="ddChev" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.99963 5.99951L7.99929 9.99917L11.9989 5.99951" stroke="#120242" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div id="menu">
+            <div class="mi" id="mi0"><i class="hl"></i><span>Last 7 days</span><svg class="ck" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.3334 4L6.00008 11.3333L2.66675 8" stroke="#1A927B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="mi" id="mi1"><i class="hl"></i><span>Last month</span><svg class="ck" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.3334 4L6.00008 11.3333L2.66675 8" stroke="#1A927B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="mi" id="mi2"><i class="hl"></i><span>Last 3 months</span><svg class="ck" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.3334 4L6.00008 11.3333L2.66675 8" stroke="#1A927B" stroke-width="1.66667" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <div class="btn" id="moreBtn"><span>More Actions</span><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4.99951 7.49951L9.99908 12.4991L14.9986 7.49951" stroke="white" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div>
+
+    <div class="cards">
+     <!-- SEO Health + Tracked Keywords -->
+     <div class="card" id="card0">
+      <div class="health">
+        <div class="hdr"><div class="ttl">SEO Health Score <svg class="help" width="20" height="20" viewBox="0 0 20 20"><use href="#i-help"/></svg></div><div class="url">website-example.com</div></div>
+        <div class="ring">
+          <svg width="156" height="156" viewBox="0 0 156 156" fill="none">
+            <circle cx="77.75" cy="77.75" r="70" stroke="#F2F4F7" stroke-width="15.5"/>
+            <circle id="ringArc" cx="78" cy="78" r="70" stroke="#25D3B1" stroke-width="16" stroke-linecap="round" transform="rotate(-90 78 78)" stroke-dasharray="439.823 439.823" stroke-dashoffset="439.823"/>
+          </svg>
+          <div class="score" id="score">
+            <div class="v"><span class="big tnum" id="ringNum">87</span><span class="of">/100</span></div>
+            <div class="chip" id="chip0"><svg width="19" height="19" viewBox="0 0 19 19" fill="none"><path d="M17.232 5.48291L11.0687 11.6461C10.7586 11.9563 10.6035 12.1114 10.4246 12.1695C10.2673 12.2206 10.0978 12.2206 9.94053 12.1695C9.76169 12.1114 9.6066 11.9563 9.29641 11.6461L7.15241 9.50214C6.84222 9.19195 6.68713 9.03686 6.50829 8.97875C6.35097 8.92763 6.18152 8.92763 6.0242 8.97875C5.84536 9.03686 5.69027 9.19195 5.38008 9.50214L1.56665 13.3156M17.232 10.9658V5.48291H11.7491" stroke="#1A927B" stroke-width="1.59609" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="chip0t" style="display:inline-block">2.1%</span></div>
+          </div>
+        </div>
+        <div class="desc">The average score of the top 10 best-performing websites is 87%.</div>
+      </div>
+      <div class="kw">
+        <div class="body">
+          <div class="sum"><div class="ttl">Tracked Keywords <svg width="20" height="20" viewBox="0 0 20 20"><use href="#i-help"/></svg></div><div class="count tnum" id="kwCount">6</div></div>
+          <div class="tbl">
+            <div class="th"><span>Position</span><span>Volume</span></div>
+            <div class="tr" data-kw><span class="p">1-3</span><span class="vol">2</span></div>
+            <div class="tr" data-kw><span class="p">4-10</span><span class="vol">4</span></div>
+            <div class="tr" data-kw><span class="p">11-20</span><span class="vol">0</span></div>
+            <div class="tr" data-kw><span class="p">21+</span><span class="vol">0</span></div>
+          </div>
+        </div>
+        <div class="link"><div>Keyword Tracking <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.6665 7.99917H13.3323M9.3326 11.9988L13.3323 7.99917L9.3326 3.99951" stroke="#475467" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+      </div>
+     </div>
+
+     <!-- Organic + Top pages -->
+     <div class="card" id="card1">
+      <div class="organic">
+        <div class="ttl">Organic Search Traffic <svg width="20" height="20" viewBox="0 0 20 20"><use href="#i-help"/></svg></div>
+        <div class="sumy">
+          <div class="val tnum" id="orgVal">10,500</div>
+          <div class="trendw">
+            <div class="chip" id="chip1"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14.6654 4.6665L9.42013 9.91181C9.15615 10.1758 9.02415 10.3078 8.87195 10.3572C8.73806 10.4007 8.59384 10.4007 8.45996 10.3572C8.30775 10.3078 8.17576 10.1758 7.91177 9.9118L6.08709 8.08712C5.8231 7.82313 5.69111 7.69114 5.5389 7.64169C5.40502 7.59818 5.2608 7.59818 5.12691 7.64169C4.97471 7.69114 4.84271 7.82313 4.57872 8.08712L1.33325 11.3326M14.6654 9.33277V4.6665H9.99917" stroke="#1A927B" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="chip1t" style="display:inline-block">2.1%</span></div>
+            <div id="oChart">
+              <svg class="plot" width="312" height="96" viewBox="0 0 312 96">
+                <defs>
+                  <linearGradient id="gO" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#25D3B1" stop-opacity=".62"/><stop offset="1" stop-color="#25D3B1" stop-opacity="0"/></linearGradient>
+                  <clipPath id="clipO"><rect id="clipORect" x="-2" y="-20" width="0" height="160"/></clipPath>
+                </defs>
+                <g clip-path="url(#clipO)">
+                  <path id="oArea" fill="url(#gO)" d=""/>
+                  <path id="oLine" fill="none" stroke="#25D3B1" stroke-width="1" d=""/>
+                </g>
+              </svg>
+              <div class="guide" id="oGuide"></div>
+              <div class="dot" id="oDot"></div>
+              <div class="tip" id="oTip"><div class="k" id="oTipK">Apr 24, 2024</div><div class="v"><span id="oTipV" style="display:inline-block">214</span><em>visits</em></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pages">
+        <div class="top"><div class="ttl">Top Pages by Traffic <svg width="20" height="20" viewBox="0 0 20 20"><use href="#i-help"/></svg></div><div class="th"><span>Page</span><span>Traffic</span></div></div>
+        <div class="main">
+          <div class="tr" data-pg><span class="u">/blog/test</span><span class="t tnum">100K</span></div>
+          <div class="tr" data-pg><span class="u">/blog/test1/service-1</span><span class="t tnum">80K</span></div>
+          <div class="tr" data-pg><span class="u">/blog/test1/service-1/service 2</span><span class="t tnum">65K</span></div>
+        </div>
+      </div>
+     </div>
+
+     <!-- Recommended -->
+     <div class="card rec" id="card2">
+      <div class="hd"><div class="ttl">Recommended Next Steps</div><div class="pg"><span>1/3</span><div class="ar"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.499 14.9986L7.49939 9.99908L12.499 4.99951" stroke="#98A2B3" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/></svg><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7.49939 14.9986L12.499 9.99908L7.49939 4.99951" stroke="#120242" stroke-width="1.49987" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+      <div class="rrow" data-rr><i class="hov"></i><div class="ct"><div class="tt"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.33396 2.66745V2.66612C7.33396 2.29815 7.6326 1.99951 7.99991 1.99951C8.36721 1.99951 8.66585 2.29815 8.66585 2.66612V2.66812C8.66585 3.90535 9.15714 5.09191 10.0324 5.9665C10.9003 6.83443 12.0749 7.32505 13.3014 7.33305C13.3121 7.33239 13.3221 7.33239 13.3328 7.33239C13.7001 7.33239 13.9987 7.63103 13.9987 7.99899C13.9987 8.36763 13.7001 8.66627 13.3328 8.66627H13.3308C12.0936 8.66627 10.907 9.15756 10.0324 10.0328C9.15714 10.9074 8.66585 12.094 8.66585 13.3312C8.66585 13.6998 8.36721 13.9991 7.99991 13.9991C7.64927 13.9991 7.36129 13.7265 7.33596 13.3819C7.33396 13.3659 7.33263 13.3492 7.33263 13.3312C7.33263 12.094 6.84134 10.9074 5.96608 10.0328C5.09149 9.15756 3.90493 8.66627 2.6677 8.66627H2.66703C2.29973 8.66627 2.00109 8.36763 2.00109 7.99899C2.00109 7.63103 2.29973 7.33239 2.66703 7.33239C2.6777 7.33239 2.6877 7.33239 2.69836 7.33305C3.92426 7.32505 5.09882 6.83443 5.96608 5.9665C6.84134 5.09191 7.33263 3.90535 7.33263 2.66812L7.33396 2.66745ZM4.66753 13.2952V13.3325C4.66753 13.7005 4.36889 13.9991 4.00092 13.9991C3.63295 13.9991 3.33431 13.7005 3.33431 13.3325C3.33431 12.9639 3.035 12.6659 2.66637 12.6659H2.66503C2.29773 12.6653 1.99976 12.3666 1.99976 11.9993C1.99976 11.6313 2.2984 11.3327 2.66637 11.3327C3.035 11.3327 3.33431 11.0347 3.33431 10.6661C3.33431 10.2981 3.63295 9.99949 4.00092 9.99949C4.36889 9.99949 4.66753 10.2981 4.66753 10.6661V10.7034C4.68686 11.0541 4.97817 11.3327 5.33414 11.3327C5.7021 11.3327 6.00075 11.6313 6.00075 11.9993C6.00075 12.3666 5.70277 12.6653 5.33547 12.6659H5.33414C4.97817 12.6659 4.68686 12.9446 4.66753 13.2952ZM7.99924 5.41522C8.28055 5.96184 8.64652 6.46646 9.08914 6.90975C9.53244 7.35238 10.0371 7.71835 10.5837 7.99966C10.0371 8.28097 9.53244 8.64694 9.08914 9.08957C8.64652 9.53286 8.28055 10.0375 7.99924 10.5841C7.71793 10.0375 7.35196 9.53286 6.90933 9.08957C6.46604 8.64694 5.96141 8.28097 5.41479 7.99966C5.96141 7.71835 6.46604 7.35238 6.90933 6.90975C7.35196 6.46646 7.71793 5.96184 7.99924 5.41522ZM12.6648 5.29523C12.6655 5.30789 12.6655 5.31989 12.6655 5.33256C12.6655 5.70053 12.3669 5.99917 11.9989 5.99917C11.6309 5.99917 11.3323 5.70053 11.3323 5.33256C11.3323 4.96392 11.033 4.66595 10.6643 4.66595H10.663C10.2957 4.66528 9.99774 4.36664 9.99774 3.99934C9.99774 3.63137 10.2964 3.33273 10.6643 3.33273C11.033 3.33273 11.3323 3.03409 11.3323 2.66612C11.3323 2.29815 11.6309 1.99951 11.9989 1.99951C12.3669 1.99951 12.6655 2.29815 12.6655 2.66612C12.6655 2.67812 12.6655 2.69079 12.6648 2.70278C12.6842 3.05409 12.9761 3.33273 13.3321 3.33273C13.7001 3.33273 13.9987 3.63137 13.9987 3.99934C13.9987 4.36664 13.7007 4.66528 13.3334 4.66595H13.3321C12.9761 4.66595 12.6842 4.94392 12.6648 5.29523Z" fill="url(#gAi)"/></svg><div class="badge">New</div><span>Try AI Visibility</span></div><div class="ds">Boost your visibility in AI search engines like ChatGPT and Google AI.</div></div><svg class="arr" width="24" height="24" viewBox="0 0 24 24"><use href="#i-step"/></svg></div>
+      <div class="rrow" data-rr><i class="hov"></i><div class="ct"><div class="tt"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.1469 3.6855H11.3878V1.00042C11.3878 0.586154 11.0518 0.250488 10.6378 0.250488C10.2238 0.250488 9.88788 0.586154 9.88788 1.00042V3.6855H6.11086V1.00042C6.11086 0.586154 5.77495 0.250488 5.36093 0.250488C4.9469 0.250488 4.61099 0.586154 4.61099 1.00042V3.6855H2.85186C2.43783 3.6855 2.10193 4.02116 2.10193 4.43543C2.10193 4.8497 2.43784 5.18537 2.85186 5.18537H3.42164V7.28992C3.42164 9.55819 5.08156 11.4412 7.24944 11.8007V14.9992C7.24944 15.4135 7.58535 15.7492 7.99937 15.7492C8.4134 15.7492 8.74931 15.4135 8.74931 14.9992V11.8007C10.9172 11.4412 12.5771 9.55819 12.5771 7.28992V5.18537H13.1469C13.5609 5.18537 13.8968 4.8497 13.8968 4.43543C13.8968 4.02116 13.5609 3.6855 13.1469 3.6855ZM11.0772 7.28992C11.0772 8.98704 9.69649 10.3678 7.99937 10.3678C6.30225 10.3678 4.92151 8.98704 4.92151 7.28992V5.18537H11.0772V7.28992Z" fill="#120242"/></svg><span>Use SEOSpace’s Plugin</span></div><div class="ds">View how to improve site’s SEO from<br>our plugin.</div></div><svg class="arr" width="24" height="24" viewBox="0 0 24 24"><use href="#i-step"/></svg></div>
+      <div class="rrow" data-rr><i class="hov"></i><div class="ct"><div class="tt"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8.66597 1.33301L1.99988 9.33232H7.99936L7.33275 14.6652L13.9988 6.66588H7.99936L8.66597 1.33301Z" stroke="#1D2939" stroke-width="1.33322" stroke-linecap="round" stroke-linejoin="round"/></svg><span>View SEO &amp; AIO Tasks</span></div><div class="ds">View high-priority personal tasks you need to fix.</div></div><svg class="arr" width="24" height="24" viewBox="0 0 24 24"><use href="#i-step"/></svg></div>
+      <div class="rrow" data-rr><i class="hov"></i><div class="ct"><div class="tt"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.9988 13.999L11.0991 11.0992M12.6656 7.33287C12.6656 10.2781 10.278 12.6657 7.33275 12.6657C4.38749 12.6657 1.99988 10.2781 1.99988 7.33287C1.99988 4.38761 4.38749 2 7.33275 2C10.278 2 12.6656 4.38761 12.6656 7.33287Z" stroke="#120242" stroke-width="1.33322" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Spy on Competitors</span></div><div class="ds">Spy on your competitors to see what keywords they rank for.</div></div><svg class="arr" width="24" height="24" viewBox="0 0 24 24"><use href="#i-step"/></svg></div>
+     </div>
+    </div>
+
+    <!-- Clicks / linear chart card -->
+    <div class="lc" id="card3">
+      <div class="stats" id="stats">
+        <div id="tabSurf"></div>
+        <div class="tile" data-tile style="left:0"><div class="lb"><span>Total Clicks</span><svg width="20" height="20" viewBox="0 0 20 20"><use href="#i-help"/></svg></div><div class="vv tnum">15,63K</div></div>
+        <div class="tile" data-tile style="left:278px"><div class="lb"><span>Total Impressions</span><svg width="20" height="20" viewBox="0 0 20 20"><use href="#i-help"/></svg></div><div class="vv tnum">2.1M</div></div>
+        <div class="tile" data-tile style="left:556px"><div class="lb"><span>Average CTR</span><svg width="20" height="20" viewBox="0 0 20 20"><use href="#i-help"/></svg></div><div class="vv tnum">1%</div></div>
+        <div class="tile" data-tile style="left:834px"><div class="lb"><span>Average Position</span></div><div class="vv tnum">40</div></div>
+        <div class="sep" data-sep style="left:555px"></div><div class="sep" data-sep style="left:833px"></div><div class="sep" data-sep style="left:1111px"></div>
+        <div id="tabLine"></div>
+      </div>
+      <div class="lcb">
+        <div class="legend" id="legend"><i></i><span id="legendT" style="display:inline-block">Clicks</span></div>
+        <div class="lcrow">
+          <div class="ylab" id="ylab"><span>36</span><span>27</span><span>18</span><span>9</span><span>0</span></div>
+          <div class="cwd">
+            <div id="cChart">
+              <div class="gl" style="top:8px"></div><div class="gl" style="top:56px"></div><div class="gl" style="top:104px"></div><div class="gl" style="top:152px"></div>
+              <div class="gv" style="left:0"></div><div class="gv" style="left:1030px"></div>
+              <svg class="plot" width="1031" height="205" viewBox="0 0 1031 205">
+                <defs>
+                  <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#25D3B1" stop-opacity=".55"/><stop offset="1" stop-color="#25D3B1" stop-opacity="0"/></linearGradient>
+                  <clipPath id="clipC"><rect id="clipCRect" x="-2" y="-30" width="0" height="260"/></clipPath>
+                </defs>
+                <g clip-path="url(#clipC)">
+                  <path id="cArea" fill="url(#gC)" d=""/>
+                  <path id="cLine" fill="none" stroke="#25D3B1" stroke-width="2" d=""/>
+                </g>
+              </svg>
+              <div class="guide" id="cGuide"></div>
+              <div class="dot" id="cDot"></div>
+              <div class="tip" id="cTip"><div class="k">Apr 27, 2024</div><div class="v"><span>74,2K</span><em>impressions</em></div></div>
+            </div>
+            <div class="dates" id="dates"><span>01/04/2024</span><span>05/04/2024</span><span>10/04/2024</span><span>15/04/2024</span><span>20/04/2024</span><span>25/04/2024</span><span>30/04/2024</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <svg id="cursor" width="28" height="28" viewBox="0 0 28 28" fill="none">
+   <path d="M4.2 2.6 L4.2 21.4 L9.1 16.9 L12.4 24.3 L15.6 22.9 L12.4 15.6 L19 15.6 Z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+ </svg>
+</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-help" viewBox="0 0 20 20"><path d="M10.0042 1.66797C14.6063 1.66797 18.3369 5.39848 18.3369 10.0006C18.3369 14.6027 14.6063 18.3332 10.0042 18.3332C5.40214 18.3332 1.67163 14.6027 1.67163 10.0006C1.67163 5.39848 5.40214 1.66797 10.0042 1.66797ZM10.0042 13.3336C9.78325 13.3336 9.57131 13.4214 9.41504 13.5777C9.25877 13.734 9.17098 13.9459 9.17098 14.1669C9.17098 14.3879 9.25877 14.5998 9.41504 14.7561C9.57131 14.9124 9.78325 15.0002 10.0042 15.0002C10.2252 15.0002 10.4372 14.9124 10.5935 14.7561C10.7497 14.5998 10.8375 14.3879 10.8375 14.1669C10.8375 13.9459 10.7497 13.734 10.5935 13.5777C10.4372 13.4214 10.2252 13.3336 10.0042 13.3336ZM10.0042 5.41765C9.20314 5.41765 8.43485 5.73588 7.86838 6.30235C7.30191 6.86882 6.98367 7.63711 6.98367 8.43822C6.98367 8.65921 7.07146 8.87116 7.22773 9.02742C7.384 9.18369 7.59594 9.27148 7.81693 9.27148C8.03793 9.27148 8.24987 9.18369 8.40614 9.02742C8.56241 8.87116 8.6502 8.65921 8.6502 8.43822C8.65047 8.19244 8.71764 7.95136 8.8445 7.74085C8.97136 7.53034 9.15312 7.35833 9.3703 7.24325C9.58748 7.12818 9.83189 7.0744 10.0773 7.08766C10.3227 7.10092 10.5599 7.18074 10.7634 7.31854C10.967 7.45635 11.1291 7.64695 11.2326 7.86991C11.336 8.09287 11.3768 8.33977 11.3506 8.58415C11.3244 8.82853 11.2321 9.06117 11.0838 9.25712C10.9354 9.45307 10.7365 9.60494 10.5084 9.69644C9.94508 9.92142 9.17098 10.498 9.17098 11.4588V11.6671C9.17098 11.8881 9.25877 12.1 9.41504 12.2563C9.57131 12.4126 9.78325 12.5004 10.0042 12.5004C10.2252 12.5004 10.4372 12.4126 10.5935 12.2563C10.7497 12.1 10.8375 11.8881 10.8375 11.6671C10.8375 11.4638 10.8792 11.3621 11.055 11.2755L11.1275 11.2421C11.7781 10.9804 12.3174 10.5005 12.653 9.88469C12.9885 9.26888 13.0994 8.55553 12.9666 7.86692C12.8338 7.17832 12.4656 6.55735 11.9251 6.11048C11.3846 5.66361 10.7055 5.41867 10.0042 5.41765Z" fill="#A8A6BF"/></symbol>
+    <symbol id="i-step" viewBox="0 0 24 24"><path d="M8.99927 17.9985L14.9988 11.999L8.99927 5.99951" stroke="#667085" stroke-width="1.99983" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+    <linearGradient id="gAi" x1="4.4007" y1="2.46728" x2="11.019" y2="13.9322" gradientUnits="userSpaceOnUse"><stop stop-color="#120242"/><stop offset="1" stop-color="#25D3B1"/></linearGradient>
+  </defs>
+</svg>
+
+<script src="motion.js"></script>
+</body>
+</html>

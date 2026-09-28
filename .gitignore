@@ -1,0 +1,4 @@
+node_modules/
+out/*
+!out/seospace-dashboard-motion.mp4
+__pycache__/

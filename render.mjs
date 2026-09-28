@@ -14,7 +14,9 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname));
 const page_url = 'file://' + path.join(root, process.env.HTML || 'index.html') + '?render=1';
 
 const browser = await chromium.launch({ executablePath: process.env.CHROME || undefined, args: ['--allow-file-access-from-files', '--force-color-profile=srgb', '--disable-lcd-text', '--font-render-hinting=none'] });
-const page = await browser.newPage({ viewport: { width: 1440, height: 1440 }, deviceScaleFactor: 1 });
+// Frame = the app's 1440×900 viewport; rendered at 4/3 density → 1920×1200 video.
+const DSF = parseFloat(process.env.DSF || String(4 / 3));
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: DSF });
 await page.goto(page_url);
 await page.evaluate(() => window.MOTION.ready);
 const info = await page.evaluate(() => ({ T: window.MOTION.T, BEAT: window.MOTION.BEAT, ev: window.MOTION.SOUND_EVENTS }));

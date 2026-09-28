@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>SEOspace Dashboard — Motion</title>
-<meta name="viewport" content="width=1440, initial-scale=1">
+<meta name="viewport" content="width=1440, height=900, initial-scale=1">
 <style>
 @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; }
 :root {
@@ -14,12 +14,11 @@
   --card-shadow: 0 1px 8px rgba(52,52,83,.14);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 1440px; height: 1440px; overflow: hidden; background: var(--canvas); }
+html, body { width: 1440px; height: 900px; overflow: hidden; background: var(--canvas); }
 body { font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; color: var(--navy); }
-#stage { position: absolute; left: 0; top: 0; width: 1440px; height: 1440px; overflow: hidden; background: var(--canvas); }
+#stage { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; overflow: hidden; background: var(--canvas); }
 #cam { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; }
-#page { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; background: var(--bg); border-radius: 21px; overflow: hidden;
-  box-shadow: 0 40px 90px rgba(58,48,38,.10), 0 12px 28px rgba(58,48,38,.06), 0 0 0 1px rgba(58,48,38,.05); }
+#page { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; background: var(--bg); overflow: hidden; }
 .abs { position: absolute; }
 .row { display: flex; align-items: center; }
 .col { display: flex; flex-direction: column; }

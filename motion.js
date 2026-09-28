@@ -178,15 +178,18 @@ const TSCROLL_UP = beat(40) + 0.3;       // 19.8  wheel back up to the header
 const TREVEAL = TSCROLL_DOWN + 0.3;      // clicks chart draws as it scrolls into view
 const WHEEL = ts => [0, 1, 2, 3, 4, 5, 6].map(k => ts - 0.07 + k * 0.043 + (k % 2) * 0.004);
 
+// The video frame IS the 1440×900 viewport: at z = 1 the app fills the frame edge to edge.
+// Every target keeps the visible region inside the page (|C − edge| ≥ half-extent / z).
 const CAM = [
-  [beat(12) - 0.25, 930, 440, 1.55],   // header actions + top cards
+  [beat(12) - 0.25, 960, 330, 1.55],   // header actions + top cards
   [beat(17) - 0.25, ...CAM_O],         // pull out: whole screen updates
-  [beat(21) - 0.3, 836, 420, 1.9],     // Organic Search Traffic
-  [beat(29) - 0.4, 1000, 460, 1.7],    // Recommended Next Steps
-  [TSCROLL_DOWN - 0.05, 900, 470, 1.24], // stats + clicks chart (scrolled; window edge + scrollbar in frame)
-  [TSCROLL_UP + 0.3, 930, 440, 1.55],  // back to header once the wheel-up has started
+  [beat(21) - 0.3, 836, 400, 1.9],     // Organic Search Traffic
+  [beat(29) - 0.4, 943, 520, 1.45],    // Recommended Next Steps (all four rows)
+  [TSCROLL_DOWN - 0.05, 859, 537, 1.24], // stats + clicks chart (scrolled; right edge + scrollbar in frame)
+  [TSCROLL_UP + 0.3, 960, 330, 1.55],  // back to header once the wheel-up has started
   [beat(45) - 0.4, ...CAM_O],          // overview
 ];
+const FW = 1440, FH = 900;                // frame = viewport
 
 // ---------------------------------------------------------------- elements & geometry (measured once, static layout)
 let E = null, G = null;
@@ -285,11 +288,12 @@ function seek(tIn) {
   const t = ((tIn % T) + T) % T;
 
   // ---------- camera
-  const cx = track(t, CAM_O[0], G.cam.map(c => [c[0], c[1]]), S.cam);
-  const cy = track(t, CAM_O[1], G.cam.map(c => [c[0], c[2]]), S.cam);
-  const z  = track(t, CAM_O[2], G.cam.map(c => [c[0], c[3]]), S.cam);
-  const SC = 0.94 * z;
-  css(E.cam, 'transform', `translate(${(720 - cx * SC).toFixed(3)}px,${(720 - cy * SC).toFixed(3)}px) scale(${SC.toFixed(5)})`);
+  const z  = Math.max(1, track(t, CAM_O[2], G.cam.map(c => [c[0], c[3]]), S.cam));
+  const hw = FW / 2 / z, hh = FH / 2 / z;   // never reveal anything outside the app
+  const cx = clamp(track(t, CAM_O[0], G.cam.map(c => [c[0], c[1]]), S.cam), hw, FW - hw);
+  const cy = clamp(track(t, CAM_O[1], G.cam.map(c => [c[0], c[2]]), S.cam), hh, FH - hh);
+  const SC = z;
+  css(E.cam, 'transform', `translate(${(FW / 2 - cx * SC).toFixed(3)}px,${(FH / 2 - cy * SC).toFixed(3)}px) scale(${SC.toFixed(5)})`);
 
   // ---------- scroll (content under fixed chrome) + overlay scrollbar
   const scroll = track(t, 0, [[TSCROLL_DOWN, SCROLL_MAX], [TSCROLL_UP, 0]], S.scroll);
@@ -462,7 +466,7 @@ function seek(tIn) {
     vis(E.cTip, hC); setT(E.cTip, lx + 16, ly - 26 + 6 * (1 - hC), 0.96 + 0.04 * hC); }
 
   // ---------- cursor render (screen space, constant size)
-  const sx = 720 + (px - cx) * SC, sy = 720 + (py - cy) * SC;
+  const sx = FW / 2 + (px - cx) * SC, sy = FH / 2 + (py - cy) * SC;
   let pAll = 0; CLICKS.forEach(c => { pAll += press(c); });
   css(E.cursor, 'transform', `translate(${(sx - 4.2).toFixed(3)}px,${(sy - 2.6).toFixed(3)}px) scale(${(1 - 0.14 * clamp(pAll)).toFixed(4)})`);
 }
@@ -473,7 +477,8 @@ const ready = (async () => {
   await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
   init(); seek(0);
 })();
-window.MOTION = { T, BPM, BEAT, beat, seek: t => seek(t), ready, SOUND_EVENTS };
+window.MOTION = { T, BPM, BEAT, beat, seek: t => seek(t), ready, SOUND_EVENTS,
+  camRaw: t => [0, 1, 2].map(k => track(t, CAM_O[k], G.cam.map(c => [c[0], c[k + 1]]), S.cam)) };  // for the clamp audit
 
 const q = new URLSearchParams(location.search);
 if (!q.has('render')) {

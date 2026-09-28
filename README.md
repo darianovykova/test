@@ -1,17 +1,19 @@
 # SEOspace dashboard — motion piece
 
-A 27-second, seamlessly looping 1440×1440 motion piece built from the existing
+A 27-second, seamlessly looping 16:10 (1920×1200) motion piece built from the existing
 SEOspace **Dashboard** screen (Figma `ANODA | Marketing - Work`, node `3353:82260`).
 The screen is rebuilt 1:1 from the Figma layer data (Inter, the file's colour
 tokens, exported icons, logo and avatar). Nothing is redesigned: all motion
-happens on the real elements. The app window is the real 1440×900 viewport of
-the Figma frame. The top bar and sidebar stay fixed, and the content area scrolls
+happens on the real elements. The video frame *is* the app's real 1440×900
+viewport from the Figma frame (rendered at 4/3 density), with no background
+canvas around it. The camera only zooms into the app and is clamped so it never
+reveals anything outside it. The top bar and sidebar stay fixed, and the content area scrolls
 to reach the Clicks chart below the fold.
 
 | File | What it is |
 |---|---|
 | `seospace-dashboard-motion.html` | **Deliverable.** Self-contained single HTML file (font, images and script inlined). Open it to watch the live loop; `?t=12.5` freezes a moment. |
-| `out/seospace-dashboard-motion.mp4` | Rendered video: 60 fps, 4-sub-frame motion blur, realistic mouse-click audio. |
+| `out/seospace-dashboard-motion.mp4` | Rendered video: 1920×1200, 60 fps, 4-sub-frame motion blur, realistic mouse-click audio. |
 | `index.html`, `motion.js`, `assets/` | Editable sources that the bundle is built from. |
 | `render.mjs` | Playwright renderer (storyboard frames, video). |
 | `synth.py` | Procedural mouse-click synthesiser (physical switch/shell model), driven by the cue sheet in `motion.js`. |
